@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voxcpm-studio"
+version = "0.1.0"
+description = "VoxCPM Studio: local inference, evaluation, and training workbench for VoxCPM"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "OpenBMB"}
+]
+maintainers = [
+    {name = "zzqDeco"}
+]
+keywords = ["voxcpm", "voxcpm-studio", "tts", "voice-cloning", "speech-synthesis", "fastapi", "react"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.5.0",
+    "torchaudio>=2.5.0",
+    "torchcodec",
+    "transformers>=4.36.2",
+    "einops",
+    "gradio>=6,<7",
+    "inflect",
+    "addict",
+    "wetext",
+    "modelscope>=1.22.0",
+    "datasets>=3,<4",
+    "huggingface-hub",
+    "pydantic",
+    "tqdm",
+    "simplejson",
+    "sortedcontainers",
+    "soundfile",
+    "librosa",
+    "matplotlib",
+    "funasr",
+    "spaces",
+    "argbind",
+    "safetensors",
+    "pyyaml",
+    "tensorboardX"
+
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "black>=21.0",
+    "flake8>=3.8",
+    "pre-commit>=2.0",
+]
+demo = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+]
+
+[project.scripts]
+voxcpm = "voxcpm.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/zzqDeco/voxcpm-studio"
+Repository = "https://github.com/zzqDeco/voxcpm-studio.git"
+Documentation = "https://github.com/zzqDeco/voxcpm-studio#readme"
+"Bug Tracker" = "https://github.com/zzqDeco/voxcpm-studio/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["voxcpm*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.tox
+  | \.venv
+  | apps/demo-web/node_modules
+  | apps/demo-web/dist
+  | models
+  | lora
+  | demo-data
+  | build
+  | dist
+)/
+'''

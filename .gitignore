@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env.demo
+models/
+lora/
+demo-data/
+apps/demo-web/node_modules/
+apps/demo-web/dist/

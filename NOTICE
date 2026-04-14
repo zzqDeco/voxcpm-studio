@@ -1,0 +1,12 @@
+VoxCPM Studio includes code derived from OpenBMB/VoxCPM.
+
+Upstream project:
+- Repository: https://github.com/OpenBMB/VoxCPM
+- License: Apache License 2.0
+
+This repository keeps the upstream Apache-2.0 license and adds local studio,
+deployment, and workflow management changes on top of that codebase snapshot.
+
+Model weights are not distributed in this repository. Download official weights
+from Hugging Face, for example:
+- https://huggingface.co/openbmb/VoxCPM2
