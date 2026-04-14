@@ -120,7 +120,8 @@ def cmd_infer(payload: dict[str, Any], *, streaming: bool) -> int:
         reference_upload = upload
 
     try:
-        if streaming:
+        use_streaming = bool(payload.get("streaming", streaming))
+        if use_streaming:
             result = runtime.run_inference(
                 model_id=model_id,
                 device=payload.get("device", "auto"),

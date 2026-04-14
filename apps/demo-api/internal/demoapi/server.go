@@ -199,6 +199,7 @@ func (a *DemoAPI) handleInferRun(w http.ResponseWriter, r *http.Request) {
 		"cfg_value":           parseFloat(r.FormValue("cfg_value"), 2.0),
 		"inference_timesteps": parseInt(r.FormValue("inference_timesteps"), 10),
 		"lora_checkpoint":     r.FormValue("lora_checkpoint"),
+		"streaming":           true,
 	}
 	if payload["lora_checkpoint"] == nil || payload["lora_checkpoint"] == "" {
 		payload["lora_checkpoint"] = nil
