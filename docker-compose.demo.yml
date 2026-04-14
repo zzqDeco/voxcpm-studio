@@ -1,0 +1,35 @@
+services:
+  demo-api:
+    build:
+      context: .
+      dockerfile: apps/demo-api/Dockerfile
+    environment:
+      VOXCPM_MODELS_DIR: /app/models
+      VOXCPM_LORA_DIR: /app/lora
+      VOXCPM_DATA_DIR: /app/demo-data
+      VOXCPM_DEVICE: ${VOXCPM_DEVICE:-cuda}
+      VOXCPM_TRAIN_PRECISION: ${VOXCPM_TRAIN_PRECISION:-amp}
+      SENSEVOICE_DEVICE: ${SENSEVOICE_DEVICE:-cuda:0}
+      DEMO_RUN_MODE: ${DEMO_RUN_MODE:-docker-cuda}
+      DEMO_API_HOST: 0.0.0.0
+      DEMO_API_PORT: ${DEMO_API_PORT:-8000}
+    ports:
+      - "${DEMO_API_PORT:-8000}:8000"
+    volumes:
+      - ./models:/app/models
+      - ./lora:/app/lora
+      - ./demo-data:/app/demo-data
+    gpus: all
+
+  demo-web:
+    build:
+      context: .
+      dockerfile: apps/demo-web/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "${DEMO_WEB_PORT:-4173}:4173"
+    depends_on:
+      - demo-api
