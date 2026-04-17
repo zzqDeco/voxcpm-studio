@@ -1,0 +1,60 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+  --font-body: "IBM Plex Sans", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-mono: "Fira Code", "IBM Plex Mono", monospace;
+
+  --color-cobalt-700: #1e40af;
+  --color-cobalt-600: #2957d0;
+  --color-cobalt-500: #3b82f6;
+  --color-amber-500: #f59e0b;
+  --color-amber-200: #f8d9a1;
+  --color-stone-050: #f7f3eb;
+  --color-stone-100: #efe6d8;
+  --color-stone-200: #dfd1bd;
+  --color-slate-900: #18212f;
+  --color-slate-800: #233248;
+  --color-slate-700: #44556d;
+  --color-slate-500: #6e7b8f;
+  --color-slate-300: #bcc6d4;
+  --color-white: #ffffff;
+  --color-success: #15935f;
+  --color-success-soft: rgba(21, 147, 95, 0.12);
+  --color-danger: #be4b39;
+  --color-danger-soft: rgba(190, 75, 57, 0.12);
+  --color-warning: #a66a1f;
+  --color-warning-soft: rgba(166, 106, 31, 0.12);
+  --color-info: #245dd8;
+  --color-info-soft: rgba(36, 93, 216, 0.12);
+  --color-neutral-soft: rgba(35, 50, 72, 0.08);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 10px 24px rgba(24, 33, 47, 0.06);
+  --shadow-md: 0 18px 48px rgba(24, 33, 47, 0.1);
+  --shadow-lg: 0 28px 72px rgba(24, 33, 47, 0.15);
+
+  --duration-fast: 180ms;
+  --duration-base: 240ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --border-subtle: 1px solid rgba(35, 50, 72, 0.1);
+  --border-strong: 1px solid rgba(35, 50, 72, 0.16);
+}
