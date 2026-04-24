@@ -104,6 +104,9 @@ func (s *DemoStorage) loadJSON(payload string) map[string]any {
 }
 
 func (s *DemoStorage) SaveRun(record map[string]any) (map[string]any, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	payload, err := s.saveJSON(record)
 	if err != nil {
 		return nil, err
@@ -143,6 +146,9 @@ func (s *DemoStorage) SaveRun(record map[string]any) (map[string]any, error) {
 }
 
 func (s *DemoStorage) ListRuns(limit int) ([]map[string]any, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	db, err := s.db()
 	if err != nil {
 		return nil, err
@@ -170,6 +176,9 @@ func (s *DemoStorage) ListRuns(limit int) ([]map[string]any, error) {
 }
 
 func (s *DemoStorage) GetRun(runID string) (map[string]any, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	db, err := s.db()
 	if err != nil {
 		return nil, false, err
@@ -190,6 +199,9 @@ func (s *DemoStorage) GetRun(runID string) (map[string]any, bool, error) {
 }
 
 func (s *DemoStorage) SaveTrainingJob(record map[string]any) (map[string]any, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	payload, err := s.saveJSON(record)
 	if err != nil {
 		return nil, err
@@ -227,6 +239,9 @@ func (s *DemoStorage) SaveTrainingJob(record map[string]any) (map[string]any, er
 }
 
 func (s *DemoStorage) GetTrainingJob(jobID string) (map[string]any, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	db, err := s.db()
 	if err != nil {
 		return nil, false, err
@@ -247,6 +262,9 @@ func (s *DemoStorage) GetTrainingJob(jobID string) (map[string]any, bool, error)
 }
 
 func (s *DemoStorage) LatestTrainingJob() (map[string]any, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	db, err := s.db()
 	if err != nil {
 		return nil, false, err
@@ -267,6 +285,9 @@ func (s *DemoStorage) LatestTrainingJob() (map[string]any, bool, error) {
 }
 
 func (s *DemoStorage) SaveBenchJob(record map[string]any) (map[string]any, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	payload, err := s.saveJSON(record)
 	if err != nil {
 		return nil, err
@@ -294,6 +315,9 @@ func (s *DemoStorage) SaveBenchJob(record map[string]any) (map[string]any, error
 }
 
 func (s *DemoStorage) GetBenchJob(jobID string) (map[string]any, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	db, err := s.db()
 	if err != nil {
 		return nil, false, err
@@ -312,9 +336,63 @@ func (s *DemoStorage) GetBenchJob(jobID string) (map[string]any, bool, error) {
 	return s.loadJSON(payload), true, nil
 }
 
+func (s *DemoStorage) RecoverInterruptedJobs(now string) error {
+	if err := s.recoverJobs("training_jobs", "training", now); err != nil {
+		return err
+	}
+	return s.recoverJobs("bench_jobs", "bench", now)
+}
+
+func (s *DemoStorage) recoverJobs(table string, kind string, now string) error {
+	db, err := s.db()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = db.Close()
+	}()
+
+	rows, err := db.Query(
+		fmt.Sprintf(`SELECT payload_json FROM %s WHERE status IN ('starting', 'running', 'stopping')`, table),
+	)
+	if err != nil {
+		return err
+	}
+	records := []map[string]any{}
+	for rows.Next() {
+		var payload string
+		if err := rows.Scan(&payload); err != nil {
+			continue
+		}
+		record := s.loadJSON(payload)
+		record["status"] = "failed"
+		record["updated_at"] = now
+		record["error"] = fmt.Sprintf("%s job interrupted by API restart", kind)
+		records = append(records, record)
+	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return err
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		if kind == "training" {
+			if _, err := s.SaveTrainingJob(record); err != nil {
+				return err
+			}
+			continue
+		}
+		if _, err := s.SaveBenchJob(record); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *DemoStorage) SaveBusyState(state map[string]any) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	if id, ok := state["id"].(string); ok && id != "" {
 		record := map[string]any{
 			"id":             id,

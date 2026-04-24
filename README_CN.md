@@ -24,7 +24,7 @@
 
 ## 技术栈
 
-- 后端：Python、FastAPI、PyTorch、VoxCPM 运行时
+- 后端：Go 1.22 API 控制面、Python worker、PyTorch、VoxCPM 运行时
 - 前端：React 18、TypeScript、Vite 5
 - 持久化：SQLite + 本地文件目录 `demo-data/`
 
@@ -34,6 +34,7 @@
 voxcpm-studio/
 ├── apps/
 │   ├── demo-api/
+│   ├── demo-worker/
 │   └── demo-web/
 ├── conf/
 ├── src/voxcpm/
@@ -97,8 +98,14 @@ PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_cuda.sh
 前后端分开启动：
 
 ```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
 ./scripts/run_demo_web_native.sh
+```
+
+旧 FastAPI 后端仍保留为迁移参照：
+
+```bash
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ```
 
 CUDA Docker Compose：

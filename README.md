@@ -6,7 +6,8 @@
 
 VoxCPM Studio is a standalone local workbench for `VoxCPM` models. It packages:
 
-- FastAPI backend for inference, streaming, training, bench runs, and history
+- Go API control plane for local runtime, inference bridge, training, bench, and history
+- Python worker and training scripts for VoxCPM model execution
 - React + Vite frontend for local model testing
 - Native startup scripts for CUDA and MPS
 - Docker Compose startup path for CUDA
@@ -24,7 +25,7 @@ the upstream Apache-2.0 license and compatible runtime APIs.
 
 ## Tech Stack
 
-- Backend: Python 3.10+, FastAPI, PyTorch, VoxCPM runtime
+- Backend: Go 1.22 API control plane, Python 3.10+ worker, PyTorch, VoxCPM runtime
 - Frontend: React 18, TypeScript, Vite 5
 - Model runtime: `src/voxcpm`
 - Local persistence: SQLite + artifact files under `demo-data/`
@@ -34,7 +35,8 @@ the upstream Apache-2.0 license and compatible runtime APIs.
 ```text
 voxcpm-studio/
 ├── apps/
-│   ├── demo-api/      # FastAPI backend
+│   ├── demo-api/      # Go API and legacy FastAPI reference
+│   ├── demo-worker/   # Python worker bridge for model execution
 │   └── demo-web/      # React frontend
 ├── conf/              # Packaged training config presets
 ├── src/voxcpm/        # VoxCPM runtime and training implementation
@@ -98,8 +100,14 @@ PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_cuda.sh
 Backend and frontend separately:
 
 ```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
 ./scripts/run_demo_web_native.sh
+```
+
+Legacy FastAPI backend remains available as a migration reference:
+
+```bash
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ```
 
 Docker Compose for CUDA:

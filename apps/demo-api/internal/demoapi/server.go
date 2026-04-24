@@ -33,6 +33,7 @@ type DemoAPI struct {
 	busyState       map[string]any
 	activeModelData *map[string]any
 	worker          *WorkerClient
+	training        *trainingRunner
 }
 
 var wsUpgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
@@ -43,11 +44,15 @@ func NewDemoAPI(settings Settings) (*DemoAPI, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := storage.RecoverInterruptedJobs(isoNow()); err != nil {
+		return nil, err
+	}
 	return &DemoAPI{
 		settings:  settings,
 		storage:   storage,
 		busyState: map[string]any{"kind": busyStateIdle, "task_id": nil, "started_at": nil},
 		worker:    NewWorkerClient(settings),
+		training:  newTrainingRunner(),
 	}, nil
 }
 
@@ -69,12 +74,12 @@ func (a *DemoAPI) Router() http.Handler {
 	r.Post("/api/asr/transcribe", a.handleASRTranscribe)
 	r.Get("/api/runs", a.handleListRuns)
 	r.Get("/api/runs/{run_id}", a.handleGetRun)
-	r.Post("/api/bench/run", a.handleNotImplemented("bench run"))
-	r.Get("/api/bench/{job_id}", a.handleNotImplemented("bench status"))
-	r.Post("/api/train/start", a.handleNotImplemented("train start"))
-	r.Post("/api/train/stop", a.handleNotImplemented("train stop"))
-	r.Get("/api/train/status", a.handleNotImplemented("train status"))
-	r.Get("/api/train/logs", a.handleNotImplemented("train logs"))
+	r.Post("/api/bench/run", a.handleStartBench)
+	r.Get("/api/bench/{job_id}", a.handleGetBench)
+	r.Post("/api/train/start", a.handleStartTraining)
+	r.Post("/api/train/stop", a.handleStopTraining)
+	r.Get("/api/train/status", a.handleTrainingStatus)
+	r.Get("/api/train/logs", a.handleTrainingLogs)
 	r.Get("/api/checkpoints", a.handleCheckpoints)
 
 	r.Route(a.settings.ArtifactsMount, func(rr chi.Router) {
@@ -456,12 +461,6 @@ func (a *DemoAPI) handleGetRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, record)
-}
-
-func (a *DemoAPI) handleNotImplemented(feature string) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		writeError(w, http.StatusNotImplemented, feature+" is not yet migrated to Go backend.", nil)
-	}
 }
 
 func (a *DemoAPI) resolveDevice(requested string) string {

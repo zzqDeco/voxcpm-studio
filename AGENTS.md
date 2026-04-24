@@ -6,7 +6,7 @@ Guidance for coding agents working in this repository.
 
 VoxCPM Studio is a standalone local workbench for VoxCPM models.
 
-- Backend: Python + FastAPI
+- Backend: Go API control plane + Python worker / training scripts
 - Frontend: React + TypeScript + Vite
 - Runtime: `src/voxcpm`
 - Training: local LoRA / Full FT entry via `scripts/train_voxcpm_finetune.py`
@@ -22,7 +22,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[demo]"
 PATH="$PWD/.venv/bin:$PATH" ./scripts/download_model.sh
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
@@ -38,6 +38,7 @@ Verification commands:
 
 ```bash
 python3 -m compileall apps/demo-api src scripts
+cd apps/demo-api && go test ./...
 cd apps/demo-web && npm run build
 ```
 
@@ -45,14 +46,16 @@ cd apps/demo-web && npm run build
 
 ### Backend
 
-- `apps/demo-api` exposes HTTP and WebSocket endpoints for:
+- `apps/demo-api` contains the Go API and legacy FastAPI reference for:
   - model scanning and loading
   - inference and streaming
   - ASR
   - bench runs
   - training orchestration
   - history and checkpoints
-- `apps/demo-api/demo_api/runtime.py` is the runtime coordinator.
+- `apps/demo-api/internal/demoapi` is the Go API control plane.
+- `apps/demo-worker/bridge.py` calls the Python runtime for model execution.
+- `apps/demo-api/demo_api/runtime.py` remains the legacy behavior baseline during migration.
 - Persistence is local SQLite plus file artifacts under `demo-data/`.
 
 ### Frontend
@@ -89,6 +92,7 @@ Allowed topic branch prefixes:
 - `fix/<desc>`
 - `docs/<desc>`
 - `plan/<desc>`
+- `refactor/<desc>`
 
 ### Pull Request Flow
 

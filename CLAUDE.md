@@ -6,7 +6,8 @@ This file provides development guidance for code assistants working in this repo
 
 VoxCPM Studio is a standalone local workbench for VoxCPM models. It combines:
 
-- a FastAPI backend for inference, training, bench, and history
+- a Go API control plane for inference, training, bench, and history
+- a Python worker and training scripts for VoxCPM model execution
 - a React frontend for local model testing and comparison
 - the VoxCPM runtime package under `src/voxcpm`
 
@@ -19,7 +20,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[demo]"
 PATH="$PWD/.venv/bin:$PATH" ./scripts/download_model.sh
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
@@ -36,6 +37,7 @@ Verification:
 
 ```bash
 python3 -m compileall apps/demo-api src scripts
+cd apps/demo-api && go test ./...
 cd apps/demo-web && npm run build
 ```
 
@@ -43,9 +45,12 @@ cd apps/demo-web && npm run build
 
 ### Backend
 
-- `apps/demo-api/main.py` boots the FastAPI app
-- `demo_api/app.py` defines HTTP and WebSocket routes
-- `demo_api/runtime.py` owns:
+- `apps/demo-api/cmd/demo-api/main.go` boots the Go API
+- `internal/demoapi/server.go` defines HTTP and WebSocket routes
+- `internal/demoapi/jobs.go` owns Training and Bench orchestration
+- `internal/demoapi/storage.go` stores local SQLite metadata
+- `apps/demo-worker/bridge.py` calls the Python runtime for model execution
+- `demo_api/runtime.py` remains the legacy FastAPI behavior baseline and owns:
   - runtime capabilities
   - model / LoRA discovery
   - inference and streaming execution
@@ -94,6 +99,7 @@ Allowed topic branch prefixes:
 - `fix/`
 - `docs/`
 - `plan/`
+- `refactor/`
 
 Documentation model:
 
