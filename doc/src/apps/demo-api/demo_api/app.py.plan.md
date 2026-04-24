@@ -9,8 +9,8 @@
 
 ## 2. 核心职责
 
-- 创建 FastAPI 应用
-- 注册所有 HTTP 与 WebSocket 路由
+- 保留旧 FastAPI 应用工厂作为迁移参照
+- 描述旧 HTTP 与 WebSocket 路由形状
 - 挂载静态 artifacts 目录
 - 统一处理 runtime busy 异常
 
@@ -25,9 +25,9 @@
 
 ## 4. 关键实现细节
 
-- `create_app()` 是唯一应用入口
-- `/api/*` 提供运行时、模型、推理、训练、历史和 checkpoint 接口
-- `/api/ws/infer-stream` 提供流式推理事件通道
+- `create_app()` 不再由默认启动脚本或 Docker 镜像暴露
+- Go API 是当前默认 `/api/*` 入口
+- 旧 `/api/ws/infer-stream` 行为仍作为流式推理事件格式参照
 - `StaticFiles` 将 `demo-data/` 暴露为 `/artifacts`
 
 ## 5. 依赖关系
@@ -42,11 +42,10 @@
 
 ## 6. 变更影响面
 
-- 路由签名变化会直接影响前端请求与启动校验
-- WebSocket 行为变化会直接影响流式推理展示
+- 该文件变化不应再引入新的公共后端能力
+- 如需调整公共路由，优先修改 Go API 并保持前端合同兼容
 
 ## 7. 维护建议
 
-- 保持路由形状稳定，避免前端协议频繁漂移
-- 参数默认值调整时优先同步前端表单默认值
-- 任何新增公共接口都要同步更新 README 中的能力说明
+- 保持为迁移参照，不再作为默认运行入口扩展
+- 参数默认值调整时优先同步 Go API、Python worker 和前端表单默认值

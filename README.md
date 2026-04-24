@@ -35,7 +35,7 @@ the upstream Apache-2.0 license and compatible runtime APIs.
 ```text
 voxcpm-studio/
 ├── apps/
-│   ├── demo-api/      # Go API and legacy FastAPI reference
+│   ├── demo-api/      # Go API and legacy Python runtime reference
 │   ├── demo-worker/   # Python worker bridge for model execution
 │   └── demo-web/      # React frontend
 ├── conf/              # Packaged training config presets
@@ -100,15 +100,11 @@ PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_cuda.sh
 Backend and frontend separately:
 
 ```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
-Legacy FastAPI backend remains available as a migration reference:
-
-```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
-```
+`run_demo_api_go_native.sh` remains as a compatibility wrapper for older local notes.
 
 Docker Compose for CUDA:
 
