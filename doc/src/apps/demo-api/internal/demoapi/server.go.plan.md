@@ -54,4 +54,4 @@
 
 - 继续保持 `/api/*` 路径和 JSON 字段与 `apps/demo-web/src/types.ts` 对齐
 - 新增任务类型时先明确 busy state、SQLite 状态和前端轮询合同
-- Go cutover 前不要再扩展旧 FastAPI 路由能力，只把它作为行为参照
+- Go cutover 后不要再扩展旧 FastAPI 路由能力，只把它作为行为参照

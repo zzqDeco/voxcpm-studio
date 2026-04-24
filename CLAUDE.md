@@ -20,7 +20,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[demo]"
 PATH="$PWD/.venv/bin:$PATH" ./scripts/download_model.sh
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
@@ -50,7 +50,7 @@ cd apps/demo-web && npm run build
 - `internal/demoapi/jobs.go` owns Training and Bench orchestration
 - `internal/demoapi/storage.go` stores local SQLite metadata
 - `apps/demo-worker/bridge.py` calls the Python runtime for model execution
-- `demo_api/runtime.py` remains the legacy FastAPI behavior baseline and owns:
+- `demo_api/runtime.py` remains the Python model execution baseline and owns:
   - runtime capabilities
   - model / LoRA discovery
   - inference and streaming execution

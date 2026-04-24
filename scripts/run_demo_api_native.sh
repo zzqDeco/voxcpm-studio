@@ -19,7 +19,5 @@ export DEMO_RUN_MODE="${DEMO_RUN_MODE:-native-cpu}"
 export DEMO_API_HOST="${DEMO_API_HOST:-0.0.0.0}"
 export DEMO_API_PORT="${DEMO_API_PORT:-8000}"
 
-exec python3 -m uvicorn main:app \
-  --host "${DEMO_API_HOST}" \
-  --port "${DEMO_API_PORT}" \
-  --app-dir "${REPO_ROOT}/apps/demo-api"
+cd "${REPO_ROOT}/apps/demo-api"
+exec go run ./cmd/demo-api
