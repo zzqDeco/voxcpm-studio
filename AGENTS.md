@@ -22,7 +22,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[demo]"
 PATH="$PWD/.venv/bin:$PATH" ./scripts/download_model.sh
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
@@ -46,7 +46,7 @@ cd apps/demo-web && npm run build
 
 ### Backend
 
-- `apps/demo-api` contains the Go API and legacy FastAPI reference for:
+- `apps/demo-api` contains the Go API and legacy Python runtime reference for:
   - model scanning and loading
   - inference and streaming
   - ASR
@@ -55,7 +55,7 @@ cd apps/demo-web && npm run build
   - history and checkpoints
 - `apps/demo-api/internal/demoapi` is the Go API control plane.
 - `apps/demo-worker/bridge.py` calls the Python runtime for model execution.
-- `apps/demo-api/demo_api/runtime.py` remains the legacy behavior baseline during migration.
+- `apps/demo-api/demo_api/runtime.py` remains the Python model execution baseline used by the worker.
 - Persistence is local SQLite plus file artifacts under `demo-data/`.
 
 ### Frontend

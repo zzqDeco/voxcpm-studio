@@ -98,15 +98,11 @@ PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_cuda.sh
 前后端分开启动：
 
 ```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_go_native.sh
+PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
 ./scripts/run_demo_web_native.sh
 ```
 
-旧 FastAPI 后端仍保留为迁移参照：
-
-```bash
-PATH="$PWD/.venv/bin:$PATH" ./scripts/run_demo_api_native.sh
-```
+`run_demo_api_go_native.sh` 保留为旧本地说明的兼容 wrapper。
 
 CUDA Docker Compose：
 
