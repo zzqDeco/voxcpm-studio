@@ -1,107 +1,51 @@
-# Design System Master File
+# VoxCPM Studio Design System
 
 > Global source of truth for `apps/demo-web`.
-> When building a specific workspace, check `design-system/pages/[page-name].md` first.
-> Page files override this master only where they explicitly differ.
+> Page overrides may live in `design-system/pages/`, but this file defines the default product language.
 
----
+## Direction
 
-**Project:** VoxCPM Studio  
-**Generated With:** UI UX Pro Max + project-specific refinement  
-**Product Type:** Local AI voice workbench  
-**Primary Audience:** Operators testing local inference, training, bench, and history workflows
+- **Source:** UI UX Pro Max, refined for a local AI voice lab.
+- **Pattern:** `Data-Dense Dashboard` + `Comparative Analysis Dashboard`.
+- **Product Form:** `Instrument Control Console`, not marketing dashboard.
+- **Audience:** operators running inference, streaming, ASR, bench, training, and history review locally.
+- **Language:** zh-CN first, with stable English technical labels where the API already uses them.
 
----
+## Visual Rules
 
-## Design Direction
+- Use a light operational surface: warm stone page base, white/zinc cards, graphite text.
+- Cobalt is the only primary action color; amber is reserved for warning, attention, and signal highlights.
+- Avoid purple, decorative gradients, emoji icons, and oversized marketing hero layouts.
+- Cards, inputs, and buttons use a compact 6-8px radius. Pills are the only fully rounded shape.
+- Use `Fira Code`/mono for metrics, logs, IDs, and technical labels; use the body sans stack for dense controls.
+- Motion stays between 150ms and 300ms, respects `prefers-reduced-motion`, and never shifts layout on hover.
 
-- **Core Pattern:** `Data-Dense Dashboard` + `Comparative Analysis Dashboard`
-- **Product Tone:** research lab + editorial control center
-- **Language Priority:** zh-CN first
-- **Device Strategy:** desktop-first, responsive down to tablet and mobile
-- **Navigation Strategy:** top control hero + sticky task rail, no permanent sidebar
+## Interaction Model
 
-## Color System
-
-| Role | Value | Notes |
-|------|-------|-------|
-| Primary action | `#1E40AF` | Cobalt control color |
-| Primary hover | `#2957D0` | Brighter action emphasis |
-| Secondary action | `#3B82F6` | Info / active state |
-| Accent | `#F59E0B` | Amber highlight, warnings, focus moments |
-| Background base | `#F7F3EB` | Warm stone surface |
-| Raised surface | `rgba(255,255,255,0.84)` | Main cards |
-| Strong text | `#18212F` | Default body contrast |
-| Muted text | `#6E7B8F` | Labels / meta |
-| Success | `#15935F` | Completed states |
-| Danger | `#BE4B39` | Error / failed |
-
-**Rules**
-- Keep the workspace in light mode.
-- Use cobalt for decisive actions and active navigation.
-- Use amber for emphasis, not as a second primary brand color.
-- Avoid purple accents and flat white backgrounds.
-
-## Typography
-
-- **Display / Section Titles:** `"Noto Serif SC", "Source Han Serif SC", "Songti SC", serif`
-- **Body / Dense UI:** `"IBM Plex Sans", "PingFang SC", "Noto Sans SC", sans-serif`
-- **Metrics / Logs / Technical Labels:** `"Fira Code", "IBM Plex Mono", monospace`
-
-**Rules**
-- Large page titles use display serif to create editorial contrast.
-- Operational labels, tabs, and metrics may use mono sparingly.
-- Dense data zones should prefer compact sans text with strong hierarchy.
-
-## Layout Rules
-
-- Hero is a control header, not a marketing banner.
-- Sticky task rail sits below the hero and contains tab navigation plus workspace status.
-- Most workspaces use a two-zone layout:
-  - Left: control, filter, or selection deck
-  - Right: result, summary, or detail deck
-- Compare uses a symmetric dual-view layout.
-- Training uses light controls plus a dark terminal zone for logs.
-- Mobile keeps the task rail as a horizontal scroll strip.
+- The app shell is a command header plus sticky workspace rail.
+- Runtime, active model, busy state, device capability, latest task, and counts must be visible without opening a tab.
+- Each workspace follows a task flow:
+  - `Playground`: Compose -> Generate -> Inspect.
+  - `Compare`: Select pair -> Inspect deltas -> Review candidates.
+  - `Bench`: Configure scenarios -> Run matrix -> Review results/skips.
+  - `Training`: Prepare config -> Launch -> Monitor logs -> Apply checkpoint.
+  - `History`: Filter -> Select -> Reuse or compare.
+- Async actions always publish a visible status banner with success, loading, busy, or error tone.
 
 ## Component Rules
 
-- **Cards:** rounded, soft-elevated, with clear header and compact spacing
-- **Buttons:** three levels only
-  - Primary: cobalt gradient
-  - Secondary: white glass surface with border
-  - Small utility: compact secondary
-- **Status pills:** use tokenized tones only (`neutral`, `info`, `success`, `warning`, `danger`)
-- **Metrics:** always in repeatable tiles with uppercase micro-label + numeric emphasis
-- **Lists / tables:** use strong row grouping and clear hover/selected state
-- **Timeline:** streaming feedback must render as an event timeline, not raw text
-- **Console:** dark terminal style reserved for training logs only
+- Buttons have three levels only: primary, secondary, text/utility.
+- Status color always comes from shared tones: `neutral`, `info`, `success`, `warning`, `danger`.
+- Tables collapse to scan-friendly cards on mobile rather than forcing page-level horizontal scroll.
+- Streaming must render as a timeline with chunk count and terminal state.
+- Training logs are isolated in a dark terminal with pause, copy, download, and scroll-to-bottom controls.
+- History rows must be useful before selection: status, mode, device, RTF, metric, and timestamp are required.
 
-## Motion + UX
+## Acceptance Checklist
 
-- Transitions stay in the `150ms–320ms` band.
-- Allow subtle hover lift; do not use layout-shifting scale effects.
-- Use visible focus rings on all interactive elements.
-- Provide keyboard reachability for nav, forms, and lists.
-- Respect `prefers-reduced-motion`.
-- Never leave async actions without explicit state feedback.
-
-## Anti-Patterns
-
-- No emoji icons
-- No purple-primary palette
-- No flat, single-tone white page background
-- No hidden focus states
-- No tab content that causes horizontal overflow on mobile
-- No generic settings-form look for Training
-- No plain text dump for streaming events
-
-## Delivery Checklist
-
-- [ ] No horizontal scroll at `390px`, `768px`, `1024px`, `1440px`
-- [ ] Sticky rail does not hide content
-- [ ] Buttons, pills, and alerts share one visual language
-- [ ] Runtime / busy / success / error states are visually distinct
-- [ ] History rows are scan-friendly before selection
-- [ ] Compare remains balanced and symmetric
-- [ ] Training log area stays visually isolated as a terminal zone
+- No horizontal page scroll at `390px`, `768px`, `1024px`, or `1440px`.
+- Keyboard focus is visible on tabs, buttons, selects, file inputs, run rows, and console controls.
+- Runtime/busy/loading states are visually distinct and not color-only.
+- Compare remains symmetric on desktop and readable on mobile.
+- Bench scenario rows show skipped/failed reasons without breaking layout.
+- Long model names, long logs, and 100+ history rows remain usable.
