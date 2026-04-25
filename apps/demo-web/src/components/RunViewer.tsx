@@ -1,6 +1,8 @@
+import { Copy, Download, GitCompare, RotateCcw } from "lucide-react";
+
 import { RunRecord } from "../types";
 import { absoluteArtifactUrl, formatTime, metricValue, toStatusTone } from "../utils";
-import { EmptyState, MetricTile, SectionCard, StatusPill } from "./primitives";
+import { EmptyState, MetricTile, SectionCard, StatusPill, Toolbar } from "./primitives";
 
 function Waveform({ points }: { points?: number[] }) {
   if (!points || points.length === 0) {
@@ -19,7 +21,7 @@ function Waveform({ points }: { points?: number[] }) {
     .join(" ");
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="viewer-waveform">
+    <svg viewBox={`0 0 ${width} ${height}`} className="viewer-waveform" role="img" aria-label="audio waveform">
       <line x1="0" y1={height / 2} x2={width} y2={height / 2} className="viewer-waveform-baseline" />
       <path d={path} className="viewer-waveform-path" />
     </svg>
@@ -39,22 +41,38 @@ export function RunViewer({
   run,
   title,
   description,
+  onReuse,
+  onCompare,
 }: {
   run?: RunRecord | null;
   title: string;
   description?: string;
+  onReuse?: (run: RunRecord) => void;
+  onCompare?: (run: RunRecord) => void;
 }) {
   if (!run) {
     return (
-      <SectionCard eyebrow="Result Deck" title={title} description={description} className="viewer-card">
+      <SectionCard eyebrow="Result Deck" title={title} description={description} className="viewer-card result-deck">
         <EmptyState title="还没有结果" description="执行推理、训练或选择历史记录后，结果会显示在这里。" />
       </SectionCard>
     );
   }
 
-  const audioUrl = absoluteArtifactUrl(run.result.audio_url);
-  const melUrl = absoluteArtifactUrl(run.result.mel_url);
-  const metricLabel = (run.metrics.metric_name ?? "quality").toUpperCase();
+  const activeRun = run;
+  const audioUrl = absoluteArtifactUrl(activeRun.result.audio_url);
+  const melUrl = absoluteArtifactUrl(activeRun.result.mel_url);
+  const metricLabel = (activeRun.metrics.metric_name ?? "quality").toUpperCase();
+  const metricTone = activeRun.status === "completed" ? "success" : activeRun.status === "failed" ? "danger" : "neutral";
+
+  async function copyText() {
+    await navigator.clipboard?.writeText(activeRun.request.resolved_text || activeRun.request.text);
+  }
+
+  function openAudio() {
+    if (audioUrl) {
+      window.open(audioUrl, "_blank", "noopener,noreferrer");
+    }
+  }
 
   return (
     <SectionCard
@@ -62,12 +80,37 @@ export function RunViewer({
       title={title}
       description={`${run.model_id} · ${run.mode} · ${run.device} · ${formatTime(run.created_at)}`}
       actions={<StatusPill tone={toStatusTone(run.status)}>{run.status}</StatusPill>}
-      className="viewer-card"
+      className="viewer-card result-deck"
     >
+      <div className="result-command-row">
+        <Toolbar>
+          {onReuse ? (
+            <button className="button button-secondary button-small" type="button" onClick={() => onReuse(run)}>
+              <RotateCcw size={14} />
+              复用参数
+            </button>
+          ) : null}
+          {onCompare ? (
+            <button className="button button-secondary button-small" type="button" onClick={() => onCompare(run)}>
+              <GitCompare size={14} />
+              送入 Compare
+            </button>
+          ) : null}
+          <button className="button button-text button-small" type="button" onClick={() => void copyText()}>
+            <Copy size={14} />
+            复制文本
+          </button>
+          <button className="button button-text button-small" type="button" onClick={openAudio} disabled={!audioUrl}>
+            <Download size={14} />
+            打开音频
+          </button>
+        </Toolbar>
+      </div>
+
       <div className="viewer-metrics-grid">
-        <MetricTile label="总耗时" value={`${metricValue(run.metrics.wall_time_ms)} ms`} />
+        <MetricTile label="总耗时" value={`${metricValue(run.metrics.wall_time_ms)} ms`} tone={metricTone} />
         <MetricTile label="音频时长" value={`${metricValue(run.metrics.audio_duration_s)} s`} />
-        <MetricTile label="RTF" value={metricValue(run.metrics.rtf, 3)} />
+        <MetricTile label="RTF" value={metricValue(run.metrics.rtf, 3)} tone={run.metrics.rtf && run.metrics.rtf < 1 ? "success" : "neutral"} />
         <MetricTile label="采样率" value={run.metrics.sample_rate ? `${run.metrics.sample_rate} Hz` : "-"} />
         <MetricTile label={metricLabel} value={metricValue(run.metrics.metric_value, 3)} />
         <MetricTile
@@ -77,10 +120,11 @@ export function RunViewer({
               ? `${metricValue(run.metrics.first_chunk_latency_ms)} ms`
               : "-"
           }
+          detail={run.metrics.chunk_count ? `${run.metrics.chunk_count} chunks` : undefined}
         />
       </div>
 
-      {audioUrl ? <audio className="viewer-audio" controls src={audioUrl} /> : null}
+      {audioUrl ? <audio className="viewer-audio" controls src={audioUrl} preload="none" /> : null}
 
       <div className="viewer-media-grid">
         <article className="result-block">
@@ -94,7 +138,7 @@ export function RunViewer({
       </div>
 
       <div className="viewer-text-grid">
-        <ResultBlock title="目标文本" value={run.request.resolved_text} />
+        <ResultBlock title="目标文本" value={run.request.resolved_text || run.request.text} />
         <ResultBlock title="ASR 转写" value={run.result.asr_text ?? "暂无 ASR 结果"} />
       </div>
 

@@ -1,4 +1,5 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { Activity, Cpu, Database, Gauge, Loader2, RefreshCw, Server, Settings2, Sparkles, Zap } from "lucide-react";
 
 import { BenchJob, CheckpointInfo, ModelInfo, RunRecord, RuntimeInfo, TrainingJob } from "./types";
 import {
@@ -25,7 +26,7 @@ import {
   summarizeSettled,
   toBannerToneClass,
 } from "./utils";
-import { EmptyState, SectionCard, StatChip, StatusPill, Toolbar } from "./components/primitives";
+import { EmptyState, IconButton, SectionCard, StatChip, StatusPill, Toolbar } from "./components/primitives";
 import { RunViewer } from "./components/RunViewer";
 import { PlaygroundPanel } from "./panels/PlaygroundPanel";
 import { ComparePanel } from "./panels/ComparePanel";
@@ -46,6 +47,11 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function initialTab(): TabKey {
+  const hash = window.location.hash.replace("#", "");
+  return tabMeta.some((item) => item.key === hash) ? (hash as TabKey) : "playground";
+}
+
 export default function App() {
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
     playground: null,
@@ -54,7 +60,7 @@ export default function App() {
     training: null,
     history: null,
   });
-  const [tab, setTab] = useState<TabKey>("playground");
+  const [tab, setTab] = useState<TabKey>(() => initialTab());
   const [runtime, setRuntime] = useState<RuntimeInfo | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [checkpoints, setCheckpoints] = useState<CheckpointInfo[]>([]);
@@ -96,7 +102,6 @@ export default function App() {
     () => (historySelectedRunId ? runsById.get(historySelectedRunId) ?? null : null),
     [historySelectedRunId, runsById],
   );
-  const currentDeviceCaps = runtime?.device_capabilities?.[runtime.device];
   const effectiveTrainingDevice = resolveDeviceSelection(trainingForm.device, runtime);
   const selectedTrainingCaps = runtime?.device_capabilities?.[effectiveTrainingDevice];
   const recommendedTrainingPrecision = resolveRecommendedPrecision(trainingForm.device, runtime);
@@ -175,6 +180,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const handleHashChange = () => {
+      setTab(initialTab());
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
     if (models.length > 0 && !playground.modelId) {
       setPlayground((prev) => ({ ...prev, modelId: models[0].id }));
       setTrainingForm((prev) => ({ ...prev, modelId: models[0].id }));
@@ -206,6 +219,9 @@ export default function App() {
       block: "nearest",
       inline: "center",
     });
+    if (window.location.hash.replace("#", "") !== tab) {
+      window.history.replaceState(null, "", `#${tab}`);
+    }
   }, [tab]);
 
   function updatePlayground<K extends keyof PlaygroundState>(key: K, value: PlaygroundState[K]) {
@@ -557,7 +573,43 @@ export default function App() {
     setBanner({ tone: "success", message: `已选中 LoRA checkpoint: ${checkpointId}` });
   }
 
+  function reuseRunInPlayground(run: RunRecord) {
+    setPlayground((prev) => ({
+      ...prev,
+      modelId: run.model_id,
+      device: run.request.device || run.device,
+      mode: (run.mode as PlaygroundState["mode"]) || prev.mode,
+      text: run.request.text || run.request.resolved_text,
+      controlInstruction: run.request.control_instruction,
+      promptText: run.request.prompt_text ?? "",
+      cfgValue: run.request.cfg_value,
+      inferenceTimesteps: run.request.inference_timesteps,
+      normalize: run.request.normalize,
+      denoise: run.request.denoise,
+      loraCheckpoint: run.request.lora_checkpoint ?? "",
+    }));
+    setTab("playground");
+    setBanner({ tone: "success", message: `已复用运行参数: ${run.id}` });
+  }
+
+  function sendRunsToCompare(leftId: string, rightId: string) {
+    setLeftRunId(leftId);
+    setRightRunId(rightId);
+    setTab("compare");
+    setBanner({ tone: "success", message: `已送入 Compare: ${leftId} / ${rightId}` });
+  }
+
+  function sendRunToCompare(run: RunRecord) {
+    setLeftRunId((prev) => (prev && prev !== run.id ? prev : compareRuns.find((item) => item.id !== run.id)?.id ?? run.id));
+    setRightRunId(run.id);
+    setTab("compare");
+    setBanner({ tone: "success", message: `已送入 Compare: ${run.id}` });
+  }
+
   const activeTab = tabMeta.find((item) => item.key === tab) ?? tabMeta[0];
+  const busyKind = runtime?.busy_state.kind ?? "idle";
+  const busyTone = busyKind === "idle" ? "neutral" : busyKind === "training" ? "warning" : "info";
+  const activeTaskLabel = runtime?.busy_state.task_id ?? (busyKind === "idle" ? "no active task" : "task pending");
 
   return (
     <div className="app-shell">
@@ -565,32 +617,36 @@ export default function App() {
         Skip to main content
       </a>
 
-      <header className="control-hero">
-        <div className="hero-copy-block">
-          <p className="hero-eyebrow">VoxCPM Studio</p>
-          <h1>本地语音实验台</h1>
-          <p className="hero-copy">
-            用统一工作台管理推理、流式监听、历史比对、基准评估和训练控制。视觉层级遵循 data-dense 与 comparative dashboard 规则，优先服务操作效率。
-          </p>
-          <div className="hero-meta-strip">
-            <StatusPill tone="neutral">{activeTab.eyebrow}</StatusPill>
-            <StatusPill tone={currentDeviceCaps?.supports_training ? "success" : "neutral"}>
-              training {currentDeviceCaps?.supports_training ? "enabled" : "disabled"}
-            </StatusPill>
-            <StatusPill tone={currentDeviceCaps?.supports_amp_training ? "info" : "warning"}>
-              {currentDeviceCaps?.supports_amp_training ? "AMP available" : "FP32 only"}
-            </StatusPill>
+      <header className="command-header">
+        <div className="brand-lockup">
+          <div className="brand-mark">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <p className="section-eyebrow">VoxCPM Studio</p>
+            <h1>本地语音实验控制台</h1>
+            <p>{activeTab.eyebrow} / {activeTab.caption}</p>
           </div>
         </div>
 
-        <div className="hero-status-grid">
-          <StatChip label="当前设备" value={runtime?.device ?? "-"} hint={runtime?.run_mode ?? "runtime"} />
-          <StatChip label="任务状态" value={runtime?.busy_state.kind ?? "idle"} hint={runtime?.busy_state.task_id ?? "no active task"} />
-          <StatChip label="ASR 设备" value={runtime?.sensevoice_device ?? "-"} hint="speech to text bridge" />
-          <StatChip label="活动模型" value={runtime?.active_model?.label ?? "未加载"} hint={runtime?.active_model?.family ?? "model idle"} />
-          <StatChip label="LoRA 数量" value={String(checkpoints.length)} hint="ready checkpoints" />
-          <StatChip label="历史结果" value={String(runs.length)} hint="local artifacts" />
+        <div className="runtime-strip" aria-label="Runtime summary">
+          <StatChip label="设备" value={runtime?.device ?? "-"} hint={runtime?.run_mode ?? "runtime"} tone="info" />
+          <StatChip label="Busy" value={busyKind} hint={activeTaskLabel} tone={busyTone} pulse={busyKind !== "idle"} />
+          <StatChip label="模型" value={runtime?.active_model?.label ?? "未加载"} hint={runtime?.active_model?.family ?? selectedModel?.family ?? "model idle"} />
+          <StatChip label="ASR" value={runtime?.sensevoice_device ?? "-"} hint="speech bridge" />
         </div>
+
+        <Toolbar className="command-actions">
+          <IconButton label="刷新工作台" onClick={() => void refreshAll()} disabled={loading}>
+            <RefreshCw size={18} className={loading ? "is-spinning" : ""} />
+          </IconButton>
+          <IconButton label="预加载模型" onClick={() => void handleLoadModel()} disabled={loading || !playground.modelId}>
+            <Zap size={18} />
+          </IconButton>
+          <IconButton label="设置入口暂未开放" disabled>
+            <Settings2 size={18} />
+          </IconButton>
+        </Toolbar>
       </header>
 
       <div className="sticky-command-bar">
@@ -604,22 +660,34 @@ export default function App() {
               className={`tab-rail-button ${tab === item.key ? "is-active" : ""}`}
               onClick={() => setTab(item.key)}
             >
+              <span className="tab-rail-icon">
+                {item.key === "playground" ? <Activity size={16} /> : null}
+                {item.key === "compare" ? <Gauge size={16} /> : null}
+                {item.key === "bench" ? <Server size={16} /> : null}
+                {item.key === "training" ? <Cpu size={16} /> : null}
+                {item.key === "history" ? <Database size={16} /> : null}
+              </span>
               <span>{item.label}</span>
               <small>{item.caption}</small>
             </button>
           ))}
         </nav>
 
-        <section className={`status-banner ${toBannerToneClass(banner.tone)}`}>
+        <section className={`task-banner ${toBannerToneClass(banner.tone)}`}>
           <div>
             <p className="section-eyebrow">Workspace Status</p>
             <strong>{banner.message}</strong>
+            <span>
+              {models.length} models / {checkpoints.length} LoRA / {runs.length} runs
+            </span>
           </div>
           <Toolbar>
             <button className="button button-secondary" onClick={() => void refreshAll()} disabled={loading}>
+              {loading ? <Loader2 size={16} className="is-spinning" /> : <RefreshCw size={16} />}
               刷新
             </button>
             <button className="button button-primary" onClick={() => void handleLoadModel()} disabled={loading || !playground.modelId}>
+              <Zap size={16} />
               预加载模型
             </button>
           </Toolbar>
@@ -647,6 +715,8 @@ export default function App() {
               run={latestRun}
               title="Latest Result"
               description="右侧保持最新生成结果，便于边调参数边听边看指标。"
+              onReuse={reuseRunInPlayground}
+              onCompare={sendRunToCompare}
             />
           </div>
         ) : null}
@@ -716,6 +786,8 @@ export default function App() {
               onHistoryFilterChange={updateHistoryFilters}
               onResetFilters={() => setHistoryFilters(defaultHistoryFilters)}
               onSelectRun={setHistorySelectedRunId}
+              onCompareRuns={sendRunsToCompare}
+              onReuseRun={reuseRunInPlayground}
             />
           </div>
         ) : null}
